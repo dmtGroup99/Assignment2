@@ -1,8 +1,8 @@
 library(data.table)
 library(ggplot2)
 #train data exist out of about 4.9 million instances and 54 variables
-data_train <- data.table::fread(input = "training_set_VU_DM_2014.csv", na.strings = c("NA", "NULL", "null"))
-data_test <- data.table::fread(input = "test_set_VU_DM_2014.csv", na.strings = c("NA", "NULL", "null"))
+data_train <- data.table::fread(input = "../training_set_VU_DM_2014.csv", na.strings = c("NA", "NULL", "null"))
+data_test <- data.table::fread(input = "../test_set_VU_DM_2014.csv", na.strings = c("NA", "NULL", "null"))
 
 prop_test <- unique(data_test$prop_id)
 prop_train <- unique(data_train$prop_id)

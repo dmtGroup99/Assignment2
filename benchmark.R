@@ -1,6 +1,6 @@
 library(data.table)
 #train data exist out of about 4.9 million instances and 54 variables
-data <- data.table::fread(input = "training_set_VU_DM_2014.csv", na.strings = c("NA", "NULL", "null"))
+data <- data.table::fread(input = "../training_set_VU_DM_2014.csv", na.strings = c("NA", "NULL", "null"))
 
 #See immediately many NULL/missing values. Thus lets check this out
 head(data, n=10)
@@ -20,7 +20,7 @@ keep <- names(missing_percentage[missing_percentage<0.8])
 data_ver2 <- subset(data, select = keep)
 
 #split data into numerical and nominal values (check this!)
-num <- data_ver2[,c("prop_review_score","prop_location_score1","prop_log_historical_price","price_usd",
+num <- data_ver2[,c("prop_review_score","prop_location_score1","prop_location_score2", "prop_log_historical_price","price_usd",
                     "srch_length_of_stay","srch_booking_window","srch_adults_count","srch_children_count",
                     "srch_room_count","orig_destination_distance")]
 
@@ -69,8 +69,10 @@ hist(target)
 X <- cbind(num2, nom2, target)
 #instances <- downSample(X, target, list = FALSE, yname = "Class")
 
-keep_id <- X[X$target==5]$srch_id
-new_X <- subset(X, srch_id %in% keep_id)
+#keep_id <- X[X$target==5]$srch_id
+#new_X <- subset(X, srch_id %in% keep_id)
+new_X <- X
+keep_id <- unique(X$srch_id)
 
 library(xgboost)
 
@@ -96,8 +98,8 @@ counts <- data.frame(table(train$srch_id))
 #  custom.folds[[i]] <- which(train$srch_id %in% t[[i]])
 #}
 
-dtrain <- xgb.DMatrix(as.matrix(train[,-c(11,30)]), label = train$target, group = counts$Freq)
-dtest <- xgb.DMatrix(as.matrix(test[,-c(11,30)]))
+dtrain <- xgb.DMatrix(as.matrix(train[,-c(12,31)]), label = train$target, group = counts$Freq)
+dtest <- xgb.DMatrix(as.matrix(test[,-c(12,31)]))
 
 #listwise model (lambdaMart)
 bst <- xgb.train(data = dtrain, max.depth = 5, eta = 1, nthread = 5, nround = 100, objective = "rank:pairwise", 
@@ -110,7 +112,7 @@ importance_matrix <- xgb.importance(colnames(dtrain),model = bst)
 print(importance_matrix)
 xgb.plot.importance(importance_matrix = importance_matrix)
 
-#benchmark approx 0.47
+#benchmark approx 0.518
 #Calculate NDCG
 predictions <- predict(bst,dtest)
 id <- test$srch_id
@@ -133,11 +135,12 @@ mean(dcg/dcg0)
 #feature engineering
 #calculating differences with respect to mean of search query numerical values
 propscore1diff <- with(X, unlist(tapply(prop_location_score1, srch_id, function(x) x-mean(x))))
+propscore2diff <- with(X, unlist(tapply(prop_location_score2, srch_id, function(x) x-mean(x))))
 propreviewscorediff <- with(X, unlist(tapply(prop_review_score, srch_id, function(x) x-mean(x))))
 propstarratingdiff <- with(X, unlist(tapply(prop_starrating, srch_id, function(x) x-mean(x))))
 priceusddiff <- with(X, unlist(tapply(price_usd, srch_id, function(x) x-mean(x))))
 
-X2 <- cbind(propscore1diff, propreviewscorediff, propstarratingdiff, priceusddiff, X)
+X2 <- cbind(propscore1diff, propscore2diff, propreviewscorediff, propstarratingdiff, priceusddiff, X)
 
 keep_id <- X2[X2$target==5]$srch_id
 new_X2 <- subset(X2, srch_id %in% keep_id)
@@ -150,8 +153,8 @@ test <- subset(new_X2, !(srch_id %in% dt))
 train <- train[order(train$srch_id),]
 counts <- data.frame(table(train$srch_id))
 
-dtrain <- xgb.DMatrix(as.matrix(train[,-c(15,34)]), label = train$target, group = counts$Freq)
-dtest <- xgb.DMatrix(as.matrix(test[,-c(15,34)]))
+dtrain <- xgb.DMatrix(as.matrix(train[,-c(17,36)]), label = train$target, group = counts$Freq)
+dtest <- xgb.DMatrix(as.matrix(test[,-c(17,36)]))
 
 #listwise model (lambdaMart)
 #approx 0.471, thus not much improvement
