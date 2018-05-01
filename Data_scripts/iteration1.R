@@ -67,70 +67,6 @@ hist(target)
 #to calculate performance metric correctly
 #library(caret)
 X <- cbind(num2, nom2, target)
-#instances <- downSample(X, target, list = FALSE, yname = "Class")
-
-#keep_id <- X[X$target==5]$srch_id
-#new_X <- subset(X, srch_id %in% keep_id)
-new_X <- X
-keep_id <- unique(X$srch_id)
-
-library(xgboost)
-
-#amount unique search id's
-#length(unique(instances$srch_id))
-
-#instances <- instances[,-which(names(instances) %in% c("srch_id"))]
-#split data random into train and test
-#dt = sort(sample(keep_id, keep_id*.8))
-dt <- sample(keep_id, 0.8*length(keep_id))
-
-train <- subset(new_X, srch_id %in% dt)
-test <- subset(new_X, !(srch_id %in% dt))
-
-train <- train[order(train$srch_id),]
-counts <- data.frame(table(train$srch_id))
-
-##for cv, but does not work
-#a <- unique(train$srch_id)
-#t <- split(a, ceiling(seq_along(a)/27678))
-#custom.folds <- vector("list", length = 4)
-#for(i in 1:4){
-#  custom.folds[[i]] <- which(train$srch_id %in% t[[i]])
-#}
-
-dtrain <- xgb.DMatrix(as.matrix(train[,-c(12,31)]), label = train$target, group = counts$Freq)
-dtest <- xgb.DMatrix(as.matrix(test[,-c(12,31)]))
-
-#listwise model (lambdaMart)
-bst <- xgb.train(data = dtrain, max.depth = 5, eta = 1, nthread = 5, nround = 100, objective = "rank:pairwise", 
-                 eval_metric = "ndcg", verbose = 3)
-
-#bst <- xgb.cv(data = dtrain, max.depth = 5, eta = 1, nthread = 5, nround = 100, objective = "rank:pairwise", 
-#                 eval_metric = "ndcg", folds = custom.folds, verbose = 3)
-
-importance_matrix <- xgb.importance(colnames(dtrain),model = bst)
-print(importance_matrix)
-xgb.plot.importance(importance_matrix = importance_matrix)
-
-#benchmark approx 0.50
-#Calculate NDCG
-predictions <- predict(bst,dtest)
-id <- test$srch_id
-label <- test$target
-
-source("ndcg_function.R")
-metric <- ndcg(label, id, predictions, 38)
-
-d <- data.frame(relevance = label, id=id, order = predictions, one=1)
-d <- d[order(d$id, -d$relevance),]
-d$co<-with(d, unlist(tapply(one, id, cumsum)))
-d$v<-with(d, (2^relevance-1)/(log(co+1, 2)))
-dcg0<-with(d[d$co<=38,], unlist(tapply(v, id, sum)))
-d<-d[order(d$id, -d$order),]
-d$co<-with(d, unlist(tapply(one, id, cumsum)))
-d$v<-with(d, (2^relevance-1)/(log(co+1, 2)))
-dcg<-with(d[d$co<=38,], unlist(tapply(v, id, sum)))
-mean(dcg/dcg0)
 
 #feature engineering
 #calculating differences with respect to mean of search query numerical values
@@ -149,24 +85,3 @@ dt <- sample(keep_id, 0.8*length(keep_id))
 
 train <- subset(new_X2, srch_id %in% dt)
 test <- subset(new_X2, !(srch_id %in% dt))
-
-train <- train[order(train$srch_id),]
-counts <- data.frame(table(train$srch_id))
-
-dtrain <- xgb.DMatrix(as.matrix(train[,-c(17,36)]), label = train$target, group = counts$Freq)
-dtest <- xgb.DMatrix(as.matrix(test[,-c(17,36)]))
-
-#listwise model (lambdaMart)
-#approx 0.471, thus not much improvement
-bst <- xgb.train(data = dtrain, max.depth = 5, eta = 1, nthread = 5, nround = 100, objective = "rank:pairwise", 
-                 eval_metric = "ndcg", verbose = 3)
-
-importance_matrix <- xgb.importance(colnames(dtrain),model = bst)
-print(importance_matrix)
-xgb.plot.importance(importance_matrix = importance_matrix)
-
-#month
-#popularity of hotel
-#stardiff
-#propscore2diff (important)
-#estimate position (important)
