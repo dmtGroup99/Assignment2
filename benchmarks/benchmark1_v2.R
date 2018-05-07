@@ -12,7 +12,7 @@ library(xgboost)
 train <- data_new$train[order(data_new$train$srch_id),]
 counts <- data.frame(table(data_new$train$srch_id))
 
-dtrain <- xgb.DMatrix(as.matrix(train[,-c(12,31)]), label = train$target, group = counts$Freq)
+dtrain <- xgb.DMatrix(as.matrix(train[,-c(12,31)]), label = train$target, group = counts$Freq) #without srch_id, target 
 dtest <- xgb.DMatrix(as.matrix(data_new$test[,-c(12,31)]))
 
 #listwise model (lambdaMart)
