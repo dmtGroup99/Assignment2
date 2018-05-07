@@ -1,9 +1,8 @@
 library(data.table)
 #load data
-#data <- data.table::fread(input = "../training_set_VU_DM_2014.csv", na.strings = c("NA", "NULL", "null"), data.table = FALSE)
-data <- sample_n(data_train, 500000)
+data <- data.table::fread(input = "../training_set_VU_DM_2014.csv", na.strings = c("NA", "NULL", "null"), data.table = FALSE)
+
 #preprocess data
-setwd("C:/Users/Vincent/Documents/GitHub/Assignment2")
 source("data_scripts_v2/iteration8_v2.R")
 data_new <- iteration8_v2(data, 0.8)
 
