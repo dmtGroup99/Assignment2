@@ -10,3 +10,4 @@ ndcg <- function(label, id, predictions, k){
   dcg<-with(d[d$co<=k,], unlist(tapply(v, id, sum)))
   return(mean(dcg/dcg0))
 }
+
