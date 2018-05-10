@@ -3,8 +3,8 @@ library(data.table)
 data <- data.table::fread(input = "../training_set_VU_DM_2014.csv", na.strings = c("NA", "NULL", "null"), data.table = FALSE)
 
 #preprocess data
-source("Version2/data_scripts_v2/iteration6_v2.R")
-data_new <- iteration6(data, 0.8)
+source("Version2/data_scripts_v2/iteration9_v2.R")
+data_new <- iteration9(data, 0.8)
 
 #train xgboost
 library(xgboost)
@@ -12,11 +12,11 @@ library(xgboost)
 train <- data_new$train[order(data_new$train$srch_id),]
 counts <- data.frame(table(train$srch_id))
 
-dtrain <- xgb.DMatrix(as.matrix(train[,-c(12,31)]), label = train$target, group = counts$Freq)
-dtest <- xgb.DMatrix(as.matrix(data_new$test[,-c(12,31)]))
+dtrain <- xgb.DMatrix(as.matrix(train[,-c(11,32)]), label = train$target, group = counts$Freq)
+dtest <- xgb.DMatrix(as.matrix(data_new$test[,-c(11,32)]))
 
 #listwise model (lambdaMart)
-bst <- xgb.train(data = dtrain, max.depth = 8, eta = 0.1, nthread = 7, nround = 1000, objective = "rank:pairwise", 
+bst <- xgb.train(data = dtrain, max.depth = 5, eta = 1, nthread = 5, nround = 100, objective = "rank:pairwise", 
                  eval_metric = "ndcg", verbose = 3)
 
 #calculate variable importance and create graph
