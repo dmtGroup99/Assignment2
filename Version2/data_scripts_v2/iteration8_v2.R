@@ -36,12 +36,16 @@ iteration8_v2 <- function(data, train_instances){
   
   #Drop variables with low relevance/quality: date_time, site_id, visitor_location_country_id, prop_country_id, prop_id, price_usd, 
   data_ver2$date_time <- NULL
-  data_ver2$site_id <- NULL
-  data_ver2$visitor_location_country_id <- NULL
-  data_ver2$prop_country_id <- NULL
-  data_ver2$prop_id <- NULL
-  data_ver2$price_usd <- NULL #low quality due to different meaning/currency per country..
-  data_ver2$orig_destination_distance <- NULL #low quality, many zeros and NA values..
+  #data_ver2$site_id <- NULL
+  #data_ver2$visitor_location_country_id <- NULL
+  #data_ver2$prop_country_id <- NULL
+  #data_ver2$prop_id <- NULL
+  #data_ver2$price_usd <- NULL #low quality due to different meaning/currency per country..
+  #data_ver2$orig_destination_distance <- NULL #low quality, many zeros and NA values..
+  
+  #1-hot encoding for site_id --> 33 dummies
+  library(dummies)
+  data_ver2<-dummy.data.frame(data_ver2,names=c("site_id"), sep = "_")
   
   #split data random into train and test
   keep_id <- unique(data_ver2$srch_id)
