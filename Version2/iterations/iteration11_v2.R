@@ -3,8 +3,8 @@ library(data.table)
 data <- data.table::fread(input = "../training_set_VU_DM_2014.csv", na.strings = c("NA", "NULL", "null"), data.table = FALSE)
 
 #preprocess data
-source("Version2/data_scripts_v2/iteration6_v2.R")
-data_new <- iteration6(data, 0.8)
+source("Version2/data_scripts_v2/iteration11_v2.R")
+data_new <- iteration11(data, 0.8)
 
 #train xgboost
 library(xgboost)
