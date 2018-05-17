@@ -26,7 +26,7 @@ impute_review_score_k <- function(df, k) {
     subset <- kNN(subset, variable = var,dist_var = vars_dist, k=5)#, numFun = weightedMean, weightDist=TRUE)# variables = c('prop_location_score2', 'prop_review_score', 'orig_destination_distance'))
     prop_review_score_imp <- rbind(prop_review_score_imp, as.matrix(subset$prop_review_score))
   }
-  subset <- slice(df_small,((99*step_size)+1):nrow(df_small))
+  subset <- slice(df_small,(((k-1)*step_size)+1):nrow(df_small))
   subset <- kNN(subset, variable = var,dist_var = vars_dist, k=5)#, numFun = weightedMean, weightDist=TRUE)# variables = c('prop_location_score2', 'prop_review_score', 'orig_destination_distance'))
   prop_review_score_imp <- rbind(prop_review_score_imp, as.matrix(subset$prop_review_score))
   print(nrow(prop_review_score_imp))
