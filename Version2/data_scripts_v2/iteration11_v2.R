@@ -7,12 +7,15 @@ iteration11 <- function(data, train_instances){
   train <- subset(data, srch_id %in% dt)
   test <- subset(data, !(srch_id %in% dt))
   
+  train$price_scape <- scale(train$price_usd)
+  train <- train[abs(train$price_scape)<=4,]
+  
   #split data into numerical and nominal values (check this!)
-  num <- train[,c("prop_review_score","prop_location_score1","prop_location_score2", "prop_log_historical_price","price_usd",
+  num <- train[,c("visitor_hist_starrating","prop_review_score","prop_location_score1","prop_location_score2", "prop_log_historical_price","price_usd",
                   "srch_length_of_stay","srch_booking_window","srch_adults_count","srch_children_count",
                   "srch_room_count","orig_destination_distance", "position")]
   
-  visit_star <- train[,c("visitor_hist_adr_usd")]
+  visit_star <- train[,c("visitor_hist_starrating")]
   visit_usd <- train[,c("visitor_hist_adr_usd")]
   
   visit_star[is.na(visit_star)] <- 0
@@ -23,6 +26,8 @@ iteration11 <- function(data, train_instances){
                   "comp2_rate", "comp2_inv", "comp3_rate", "comp3_inv", "comp5_rate", "comp5_inv", "comp8_rate", "comp8_inv")]
   
   num_review <- train[,c("prop_review_score")]
+  
+  num$prop_log_historical_price[num$prop_log_historical_price==0] <- NA
   
   num_median <- apply(num, 2, function(x) median(x, na.rm = TRUE))
   nom_occur <- apply(nom, 2, function(x) names(which.max(table(x))))
@@ -70,21 +75,25 @@ iteration11 <- function(data, train_instances){
   train_set$priceusddiff <- with(train_set, unlist(tapply(price_usd, srch_id, function(x) x-median(x))))
   train_set$visitusddiff <- train_set$price_usd - visit_usd
   train_set$visitstardiff <- train_set$prop_starrating - visit_star
-
+  train_set$histpricedff <- exp(train_set$prop_log_historical_price) - train_set$price_usd
+  #train_set$pricerank <-  train_set$priceusddiff <- with(train_set, unlist(tapply(price_usd, srch_id, function(x) rank(x))))
+  
   #split data into numerical and nominal values (check this!)
-  num <- test[,c("prop_review_score","prop_location_score1","prop_location_score2", "prop_log_historical_price","price_usd",
+  num <- test[,c("visitor_hist_starrating","prop_review_score","prop_location_score1","prop_location_score2", "prop_log_historical_price","price_usd",
                  "srch_length_of_stay","srch_booking_window","srch_adults_count","srch_children_count",
                  "srch_room_count","orig_destination_distance")]
   
-  visit_star <- test[,c("visitor_hist_adr_usd")]
+  visit_star <- test[,c("visitor_hist_starrating")]
   visit_usd <- test[,c("visitor_hist_adr_usd")]
   
   visit_star[is.na(visit_star)] <- 0
   visit_usd[is.na(visit_usd)] <- 0
   
-  nom <- test[,c("srch_id", "site_id", "visitor_location_country_id", "prop_country_id", "prop_id", "prop_starrating",
+  nom <- test[,c("srch_id", "site_id","visitor_location_country_id", "prop_country_id", "prop_id", "prop_starrating",
                  "prop_brand_bool", "promotion_flag", "srch_destination_id", "srch_saturday_night_bool", "random_bool",
                  "comp2_rate", "comp2_inv", "comp3_rate", "comp3_inv", "comp5_rate", "comp5_inv", "comp8_rate", "comp8_inv")]
+  
+  num$prop_log_historical_price[num$prop_log_historical_price==0] <- NA
   
   num <- numeric_median(num, num_median)
   nom <- nominal_occurence(nom, nom_occur)
@@ -115,6 +124,8 @@ iteration11 <- function(data, train_instances){
   test_set$priceusddiff <- with(test_set, unlist(tapply(price_usd, srch_id, function(x) x-median(x))))
   test_set$visitusddiff <- test_set$price_usd - visit_usd
   test_set$visitstardiff <- test_set$prop_starrating - visit_star
+  test_set$histpricedff <- exp(test_set$prop_log_historical_price) - test_set$price_usd
+  #test_set$pricerank <-  test_set$priceusddiff <- with(test_set, unlist(tapply(price_usd, srch_id, function(x) rank(x))))
   
   out <- list()
   out$train <- train_set
