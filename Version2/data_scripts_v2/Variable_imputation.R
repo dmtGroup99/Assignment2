@@ -1,6 +1,7 @@
 library("glmnet")
 library("VIM")
 library("dplyr")
+library("corrplot")
 impute_review_score <- function(df) {
   var <- c("prop_review_score")
   vars_dist <- c('prop_starrating', 'prop_brand_bool', 'prop_location_score1', 'prop_log_historical_price')
