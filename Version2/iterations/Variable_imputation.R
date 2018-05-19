@@ -1,5 +1,6 @@
 library("glmnet")
 library("VIM")
+library("dplyr")
 impute_review_score <- function(df) {
   var <- c("prop_review_score")
   vars_dist <- c('prop_starrating', 'prop_brand_bool', 'prop_location_score1', 'prop_log_historical_price')
@@ -45,16 +46,18 @@ impute_prop_location_score2 <- function(df) {
   hist(traindata$prop_location_score2, breaks=100)
   y_train <- as.matrix(log(traindata$prop_location_score2+0.0000001)) 
   #hist(y_train, breaks = 100)
-  X_train <- as.matrix(traindata[,-c('prop_location_score2', 'ID')])
+  X_train <- as.matrix(traindata[,-which(colnames(traindata) %in% c('prop_location_score2', 'ID'))])
   cvfit <- cv.glmnet(X_train, y_train, type.measure = 'mse')
   #plot(cvfit)
-  X_target <- as.matrix(targetdata[, -c('prop_location_score2', 'ID')])
+  X_target <- as.matrix(targetdata[, -which(colnames(traindata) %in% c('prop_location_score2', 'ID'))])
   logy_hat <- predict(cvfit, newx=X_target, s = "lambda.min")
   #hist(logy_hat, breaks=100)
   y_hat <- exp(logy_hat)
   hist(y_hat, breaks=100)
   hist(traindata$prop_location_score2, breaks=100)
   targetdata$prop_location_score2 <- y_hat
+  targetdata <- do.call(data.frame, targetdata)
+  colnames(targetdata)[1] <- "prop_location_score2"
   subset <- rbind(targetdata, traindata)
   subset <- subset[order(subset$ID),]
   df$prop_location_score2 <- subset$prop_location_score2

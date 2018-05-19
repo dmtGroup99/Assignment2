@@ -13,8 +13,8 @@ train <- data_new$train[order(data_new$train$srch_id),]
 counts <- data.frame(table(data_new$train$srch_id))
 
 #hoort de position erin? heb ik er nu uitgehaald
-dtrain <- xgb.DMatrix(as.matrix(train[,-c(1, 22, 10)]), label = train$target, group = counts$Freq) #without srch_id, target 
-dtest <- xgb.DMatrix(as.matrix(data_new$test[,-c(1, 10, 22)]))
+dtrain <- xgb.DMatrix(as.matrix(train[,-which(colnames(train) %in% c("srch_id", "position", "target"))]), label = train$target, group = counts$Freq) #without srch_id, target 
+dtest <- xgb.DMatrix(as.matrix(data_new$test[,-which(colnames(data_new$test) %in% c("srch_id", "position", "target"))]))
 
 #listwise model (lambdaMart)
 bst <- xgb.train(data = dtrain, max.depth = 5, eta = 1, nthread = 5, nround = 100, objective = "rank:pairwise", 

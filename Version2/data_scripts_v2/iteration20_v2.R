@@ -7,31 +7,34 @@ iteration20 <- function(data, train_instances){
   train <- subset(data, srch_id %in% dt)
   test <- subset(data, !(srch_id %in% dt))
   
+  #remove usd outliers
+  train$price_scale <- scale(train$price_usd)
+  train <- train[abs(train$price_scale)<=4,]
+  
   #Impute missing values for review score (using kNN) and prop_location_score2 (based on loglinear lm)
   source('Variable_imputation.R')
-  train <- impute_review_score(train) #If this one does not work, then use impute_review_score_k
-  #train <- impute_review_score_k(train, k=50) #Perform kNN in k steps (The lower the k, the better)
+  #train <- impute_review_score(train) #If this one does not work, then use impute_review_score_k
+  train <- impute_review_score_k(train, k=50) #Perform kNN in k steps (The lower the k, the better)
   train <- impute_prop_location_score2(train)
-  test <- impute_review_score(test) #If this one does not work, then use impute_review_score_k
-  #test <- impute_review_score_k(test, k=100) #Perform kNN in k steps (The lower the k, the better)
+  #test <- impute_review_score(test) #If this one does not work, then use impute_review_score_k
+  test <- impute_review_score_k(test, k=50) #Perform kNN in k steps (The lower the k, the better)
   test <- impute_prop_location_score2(test)
   
   
   
   #split data into numerical and nominal values (check this!)
-  num <- train[,c("prop_review_score","prop_location_score1","prop_location_score2", "prop_log_historical_price","price_usd",
+  num <- train[,c("orig_destination_distance","visitor_hist_starrating","prop_review_score","prop_location_score1","prop_location_score2", "prop_log_historical_price","price_usd",
                   "srch_length_of_stay","srch_booking_window","srch_adults_count","srch_children_count",
                   "srch_room_count","orig_destination_distance", "position")]
   
-  visit_star <- train[,c("visitor_hist_adr_usd")]
+  visit_star <- train[,c("visitor_hist_starrating")]
   visit_usd <- train[,c("visitor_hist_adr_usd")]
   
   visit_star[is.na(visit_star)] <- 0
   visit_usd[is.na(visit_usd)] <- 0
   
   nom <- train[,c("srch_id", "site_id", "visitor_location_country_id", "prop_country_id", "prop_id", "prop_starrating",
-                  "prop_brand_bool", "promotion_flag", "srch_destination_id", "srch_saturday_night_bool", "random_bool",
-                  "comp2_rate", "comp2_inv", "comp3_rate", "comp3_inv", "comp5_rate", "comp5_inv", "comp8_rate", "comp8_inv")]
+                  "prop_brand_bool", "promotion_flag", "srch_destination_id", "srch_saturday_night_bool", "random_bool")]
   
   num_review <- train[,c("prop_review_score")]
   
@@ -83,19 +86,18 @@ iteration20 <- function(data, train_instances){
   train_set$visitstardiff <- train_set$prop_starrating - visit_star
 
   #split data into numerical and nominal values (check this!)
-  num <- test[,c("prop_review_score","prop_location_score1","prop_location_score2", "prop_log_historical_price","price_usd",
+  num <- test[,c("orig_destination_distance", "visitor_hist_starrating","prop_review_score","prop_location_score1","prop_location_score2", "prop_log_historical_price","price_usd",
                  "srch_length_of_stay","srch_booking_window","srch_adults_count","srch_children_count",
                  "srch_room_count","orig_destination_distance")]
   
-  visit_star <- test[,c("visitor_hist_adr_usd")]
+  visit_star <- test[,c("visitor_hist_starrating")]
   visit_usd <- test[,c("visitor_hist_adr_usd")]
   
   visit_star[is.na(visit_star)] <- 0
   visit_usd[is.na(visit_usd)] <- 0
   
   nom <- test[,c("srch_id", "site_id", "visitor_location_country_id", "prop_country_id", "prop_id", "prop_starrating",
-                 "prop_brand_bool", "promotion_flag", "srch_destination_id", "srch_saturday_night_bool", "random_bool",
-                 "comp2_rate", "comp2_inv", "comp3_rate", "comp3_inv", "comp5_rate", "comp5_inv", "comp8_rate", "comp8_inv")]
+                 "prop_brand_bool", "promotion_flag", "srch_destination_id", "srch_saturday_night_bool", "random_bool")]
   
   num <- numeric_median(num, num_median)
   nom <- nominal_occurence(nom, nom_occur)
